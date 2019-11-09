@@ -17,11 +17,6 @@ const port = 1337;
 
 var jsonParser = bodyParser.json();
 
-bcrypt.hash(myPlaintextPassword, saltRounds, function(err, hash) {
-    // spara lösenord i databasen.
-});
-
-
 
 app.use(cors());
 
