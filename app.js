@@ -4,13 +4,11 @@ const cors = require('cors');
 const morgan = require('morgan');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database('./db/texts.sqlite');
+var db = require('./db/database.js');
 //export JWT_SECRET='jfsdkjdgt7775jmcg678ncv67yvrn6v76yvm9x9xgckewlkwrgj845knjwgkljwe'
 
 const secret = process.env.JWT_SECRET;
 const saltRounds = 10;
-const myPlaintextPassword = 'longandhardP4$$w0rD';
 
 const app = express();
 const port = 1337;
@@ -38,24 +36,24 @@ app.get("/", (req, res) => {
 
 app.get("/reports/week:week", (req, res) => {
     db.all("SELECT * FROM reports WHERE week=?",
-    req.params.week, (err, rows) => {
-        if (err) {
-            res.json(
-                {
-                    error: "SQL failure",
-                    details: err
-                }
-            );
-        } else if (rows[0]) {
-            res.json({
-                report: rows[0].report
-            })
-        } else {
-            res.json({
-                error: "Week does not exist"
-            })
-        }
-    });
+        req.params.week, (err, rows) => {
+            if (err) {
+                res.json(
+                    {
+                        error: "SQL failure",
+                        details: err
+                    }
+                );
+            } else if (rows[0]) {
+                res.json({
+                    report: rows[0].report
+                });
+            } else {
+                res.json({
+                    error: "Week does not exist"
+                });
+            }
+        });
 });
 
 
@@ -64,25 +62,26 @@ app.post("/register", jsonParser, (req, res) => {
         db.run("INSERT INTO users (name, birth, email, password) VALUES (?, ?, ?, ?)",
             req.body.name, req.body.birth, req.body.email, hash, (err) => {
                 if (err) {
-                    if (err.errno=19) {
+                    if (err.errno==19) {
                         res.json(
                             {
                                 error: "Email exist",
                             }
-                        )
+                        );
                     } else {
-                    res.json(
-                        {
-                            error: "SQL failure",
-                            details: err
-                        }
-                    )}
+                        res.json(
+                            {
+                                error: "SQL failure",
+                                details: err
+                            }
+                        );
+                    }
                 } else {
                     res.status(201).json(
                         {
                             msg: "User inserted"
                         }
-                    )
+                    );
                 }
             }
         );
@@ -103,29 +102,30 @@ app.post("/login", jsonParser, (req, res) => {
             } else if (rows[0]) {
                 bcrypt.compare(req.body.password, rows[0].password, function(err, valid) {
                     if (valid) {
-                        const token = jwt.sign({email:req.body.email}, secret);
+                        const token = jwt.sign({ email: req.body.email }, secret);
+
                         res.json({
                             error: false,
                             token: token
-                        })
+                        });
                     } else {
                         res.json({
                             error: "Invalid password"
-                        })
+                        });
                     }
                 });
             } else {
                 res.json({
                     error: "User does not exist"
-                })
+                });
             }
         }
-    )
+    );
 });
 
 
 app.post("/reports", jsonParser, (req, res) => {
-    jwt.verify(req.body.token, process.env.JWT_SECRET, function(err, decoded) {
+    jwt.verify(req.body.token, process.env.JWT_SECRET, function(err) {
         if (err) {
             res.json(
                 {
@@ -148,17 +148,18 @@ app.post("/reports", jsonParser, (req, res) => {
                             {
                                 msg: "Report inserted"
                             }
-                        )
+                        );
                     }
                 }
-            )
+            );
         }
-    })
+    });
 });
 
 
 app.use((req, res, next) => {
     var err = new Error("Not Found");
+
     err.status = 404;
     next(err);
 });
@@ -182,4 +183,4 @@ app.use((err, req, res, next) => {
 
 
 // Start up server
-app.listen(port, () => console.log(`me-API listening on port ${port}!`));
+module.exports = app.listen(port, () => console.log(`me-API listening on port ${port}!`));

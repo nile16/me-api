@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "pretest": "bash db/reset_test_db.bash",
+    "test": "nyc --reporter=html --reporter=text --reporter=clover mocha --exit --timeout 10000",
+    "posttest": "npm run eslint",
     "start": "nodemon app.js",
+    "eslint": "eslint app.js test/test.js",
     "production": "NODE_ENV='production' node app.js"
   },
-  "author": "Nils Leandersson",
+  "author": "Nils Leandersson (nile16)",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -17,7 +21,15 @@
     "morgan": "^1.9.1",
     "sqlite3": "^4.1.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "eslint": "^6.6.0",
+    "eslint-plugin-react": "^7.16.0",
+    "javascript-style-guide": "^1.0.1",
+    "mocha": "^6.2.2",
+    "nyc": "^14.1.1"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nile16/me-api.git"
@@ -26,5 +38,5 @@
     "url": "https://github.com/nile16/me-api/issues"
   },
   "homepage": "https://github.com/nile16/me-api#readme",
-  "description": "API for exercise kmom3"
+  "description": "API for exercise kmom4"
 }

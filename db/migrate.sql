@@ -19,9 +19,9 @@ CREATE TABLE IF NOT EXISTS reports (
 
 INSERT INTO reports (week, report)
 VALUES
-    ( 1, "Test rapport 1"),
-    ( 2, "Test rapport 2"),
-    ( 3, "Test rapport 3"),
-    ( 4, "Test rapport 4"),
-    ( 5, "Test rapport 5"),
-    ( 6, "Test rapport 6");
+    ( 1, "Testrapport 1"),
+    ( 2, "Testrapport 2"),
+    ( 3, "Testrapport 3"),
+    ( 4, "Testrapport 4"),
+    ( 5, "Testrapport 5"),
+    ( 6, "Testrapport 6");
