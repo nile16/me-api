@@ -183,4 +183,4 @@ app.use((err, req, res, next) => {
 
 
 // Start up server
-module.exports = app.listen(port, () => console.log(`me-API listening on port ${port}!`));
+module.exports = app.listen(port);
