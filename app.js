@@ -1,19 +1,21 @@
 const express = require('express');
+const WebSocket = require("ws");
+const http = require("http");
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 var db = require('./db/database.js');
+var jsonParser = bodyParser.json();
 //export JWT_SECRET='jfsdkjdgt7775jmcg678ncv67yvrn6v76yvm9x9xgckewlkwrgj845knjwgkljwe'
 
 const secret = process.env.JWT_SECRET;
 const saltRounds = 10;
-
-const app = express();
 const port = 1337;
-
-var jsonParser = bodyParser.json();
 
 
 app.use(cors());
@@ -23,6 +25,28 @@ if (process.env.NODE_ENV !== 'test') {
     // use morgan to log at command line
     app.use(morgan('combined')); // 'combined' outputs the Apache style LOGs
 }
+
+
+wss.broadcast = (data) => {
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(data);
+        }
+    });
+};
+
+
+wss.on("connection", (ws/*ws, req*/) => {
+    ws.on("message", (msg) => {
+        let d = new Date();
+
+        wss.broadcast(d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()+" "+msg);
+    });
+
+    ws.on("error", (error) => {
+        console.log(`Server error: ${error}`);
+    });
+});
 
 
 app.get("/", (req, res) => {
@@ -183,4 +207,4 @@ app.use((err, req, res, next) => {
 
 
 // Start up server
-module.exports = app.listen(port);
+module.exports = server.listen(port);
