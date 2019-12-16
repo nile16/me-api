@@ -11,11 +11,42 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 var db = require('./db/database.js');
 var jsonParser = bodyParser.json();
+const mongo = require("mongodb").MongoClient;
 //export JWT_SECRET='jfsdkjdgt7775jmcg678ncv67yvrn6v76yvm9x9xgckewlkwrgj845knjwgkljwe'
 
 const secret = process.env.JWT_SECRET;
 const saltRounds = 10;
 const port = 1337;
+
+
+async function addMessageToDb(msg) {
+    const client  = await mongo.connect("mongodb://localhost:27017/chat",
+        {useUnifiedTopology: true, useNewUrlParser: true });
+    const db = await client.db();
+    const col = await db.collection("messages");
+
+    await col.insertOne(msg);
+    await client.close();
+}
+
+
+async function getOldMessagesFromDb() {
+    const client  = await mongo.connect("mongodb://localhost:27017/chat",
+        {useUnifiedTopology: true, useNewUrlParser: true });
+    const db = await client.db();
+    const col = await db.collection("messages");
+    let d = new Date();
+
+    let timeLimit = d.getTime() - 86400000; // 24 hours ago
+
+    await col.deleteMany( { time: { $lt: timeLimit } } );
+
+    let res = await col.find().toArray();
+
+    await client.close();
+
+    return res;
+}
 
 
 app.use(cors());
@@ -36,11 +67,18 @@ wss.broadcast = (data) => {
 };
 
 
-wss.on("connection", (ws/*ws, req*/) => {
-    ws.on("message", (msg) => {
-        let d = new Date();
+wss.on("connection", async (ws/*ws, req*/) => {
+    ws.send(JSON.stringify(await getOldMessagesFromDb()));
 
-        wss.broadcast(d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()+" "+msg);
+    ws.on("message", (msgJson) => {
+        let d = new Date();
+        let msg = JSON.parse(msgJson);
+
+        msg.time = d.getTime();
+
+        addMessageToDb(msg);
+
+        wss.broadcast(JSON.stringify([msg]));
     });
 
     ws.on("error", (error) => {
